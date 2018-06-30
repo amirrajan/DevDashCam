@@ -32,17 +32,18 @@ gaze_data_example (TobiiResearchEyeTracker* eyetracker)
 
   if (status != TOBII_RESEARCH_STATUS_OK) { return; }
 
-  sleep_ms(250);
+  while (1) {
+    sleep_ms(500);
+
+    printf("%f,%f\n",
+	   gaze_data.left_eye.gaze_point.position_on_display_area.x,
+	   gaze_data.left_eye.gaze_point.position_on_display_area.y);
+    fflush(stdout);
+  }
 
   status =
     tobii_research_unsubscribe_from_gaze_data(eyetracker,
 					      gaze_data_callback);
-
-  printf("%f,%f\n",
-         gaze_data.left_eye.gaze_point.position_on_display_area.x,
-         gaze_data.left_eye.gaze_point.position_on_display_area.y);
-
-  sleep_ms(250);
 }
 
 int main ()

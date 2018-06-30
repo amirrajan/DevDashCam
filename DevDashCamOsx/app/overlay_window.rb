@@ -1,7 +1,8 @@
 class OverlayWindow < NSWindow
   def show
-    @calibration_offset_x = -15
-    @calibration_offset_y = -10
+    $overlay = self
+    @calibration_offset_x = -90
+    @calibration_offset_y = -60
     @screen_width = 2560
     @screen_height = 1067
     @tick = 0
@@ -17,13 +18,13 @@ class OverlayWindow < NSWindow
     self.contentView.setWantsLayer(false)
     self.setAlphaValue(0.4)
     self.setOpaque(false)
-    process_gaze
+    start_daemon
     start_timer
   end
 
   def start_timer
     NSTimer.scheduledTimerWithTimeInterval(
-      0.016,
+      0.008,
       target: self,
       selector: 'tick',
       userInfo: nil,
@@ -33,12 +34,12 @@ class OverlayWindow < NSWindow
 
   def tick
     if @tick == 0
-      NSThread.detachNewThreadSelector :process_gaze, toTarget: self, withObject: nil
+      NSThread.detachNewThreadSelector :set_next_target, toTarget: self, withObject: nil
     end
 
     @tick += 1
 
-    if @tick == 30
+    if @tick == 60
       @tick = 0
     end
 
@@ -57,31 +58,38 @@ class OverlayWindow < NSWindow
     @current_y = next_y
   end
 
-  def process_gaze
-    pipe = NSPipe.pipe
-    file = pipe.fileHandleForReading;
-    # todo: check to to see if process is still running
-    task = NSTask.alloc.init
-    task.launchPath = "/usr/local/bin/run-gaze-cli"
-    task.standardOutput = pipe;
-    task.launch
-    data = file.readDataToEndOfFile
-    file.closeFile
-    output = NSString.alloc.initWithData(data, encoding: NSUTF8StringEncoding)
-    x_ratio = output.split(',')[0].to_f
-    y_ratio = output.split(',')[1].to_f
-    if (x_ratio != 0 && y_ratio != 0)
-      # 0, 0 is top left
-      # 1, 1 is bottom right
-      # 0, 1 is bottom left
-      # 1, 0 is top right
-      next_target_x = @screen_width * x_ratio
-      next_target_y = @screen_height - (@screen_height * y_ratio)
+  def set_next_target
+    data = @file.availableData
+    if data.length > 0
+      output = NSString.alloc.initWithData(data, encoding: NSUTF8StringEncoding)
+      output = output.each_line.to_a.last
+      x_ratio = output.split(',')[0].to_f
+      y_ratio = output.split(',')[1].to_f
+      if (x_ratio != 0 && y_ratio != 0)
+        # 0, 0 is top left
+        # 1, 1 is bottom right
+        # 0, 1 is bottom left
+        # 1, 0 is top right
+        next_target_x = @screen_width * x_ratio
+        next_target_y = @screen_height - (@screen_height * y_ratio)
 
-      if (@target_x - next_target_x).abs > 50 || (@target_y - next_target_y) > 50
-        @target_x = next_target_x
-        @target_y = next_target_y
+        if (@target_x - next_target_x).abs > 30 || (@target_y - next_target_y) > 30
+          @target_x = next_target_x
+          @target_y = next_target_y
+        end
       end
     end
+
+    @file.waitForDataInBackgroundAndNotify
+  end
+
+  def start_daemon
+    @pipe = NSPipe.pipe
+    @file = @pipe.fileHandleForReading;
+    @task = NSTask.alloc.init
+    @task.launchPath = "/usr/local/bin/run-gaze-cli"
+    @task.standardOutput = @pipe;
+    @task.launch
+    @file.waitForDataInBackgroundAndNotify
   end
 end
