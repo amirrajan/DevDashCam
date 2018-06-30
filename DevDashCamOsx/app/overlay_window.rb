@@ -1,7 +1,7 @@
 class OverlayWindow < NSWindow
   def show
-    @calibration_offset_x = -50
-    @calibration_offset_y = 0
+    @calibration_offset_x = -15
+    @calibration_offset_y = -10
     @screen_width = 2560
     @screen_height = 1067
     @tick = 0
@@ -15,7 +15,7 @@ class OverlayWindow < NSWindow
     self.setBackgroundColor(NSColor.colorWithPatternImage(@source))
     self.setLevel(NSFloatingWindowLevel)
     self.contentView.setWantsLayer(false)
-    self.setAlphaValue(1.0)
+    self.setAlphaValue(0.4)
     self.setOpaque(false)
     process_gaze
     start_timer
@@ -50,15 +50,17 @@ class OverlayWindow < NSWindow
   def move_view
     next_x = @current_x - ((@current_x - @target_x) * 0.07)
     next_y = @current_y - ((@current_y - @target_y) * 0.07)
-    self.setFrameOrigin(NSMakePoint(next_x.to_i + @calibration_offset_x, next_y.to_i + @calibration_offset_y))
+    self.setFrameOrigin(
+      NSMakePoint(next_x.to_i + @calibration_offset_x,
+                  next_y.to_i + @calibration_offset_y))
     @current_x = next_x
     @current_y = next_y
   end
 
   def process_gaze
-    pid = NSProcessInfo.processInfo.processIdentifier
     pipe = NSPipe.pipe
     file = pipe.fileHandleForReading;
+    # todo: check to to see if process is still running
     task = NSTask.alloc.init
     task.launchPath = "/usr/local/bin/run-gaze-cli"
     task.standardOutput = pipe;
@@ -75,13 +77,11 @@ class OverlayWindow < NSWindow
       # 1, 0 is top right
       next_target_x = @screen_width * x_ratio
       next_target_y = @screen_height - (@screen_height * y_ratio)
-      @target_x = next_target_x
-      @target_y = next_target_y
-      puts "#{x_ratio},#{y_ratio}"
-      puts "#{@target_x},#{@target_y}"
-      puts "#{@current_x},#{@current_y}"
+
+      if (@target_x - next_target_x).abs > 50 || (@target_y - next_target_y) > 50
+        @target_x = next_target_x
+        @target_y = next_target_y
+      end
     end
-
-
   end
 end
