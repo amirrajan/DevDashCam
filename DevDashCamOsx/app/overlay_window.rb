@@ -1,8 +1,8 @@
 class OverlayWindow < NSWindow
   def show
     $overlay = self
-    @calibration_offset_x = -90
-    @calibration_offset_y = -60
+    @calibration_offset_x = -85
+    @calibration_offset_y = -45
     @screen_width = 2560
     @screen_height = 1067
     @tick = 0
@@ -16,7 +16,7 @@ class OverlayWindow < NSWindow
     self.setBackgroundColor(NSColor.colorWithPatternImage(@source))
     self.setLevel(NSFloatingWindowLevel)
     self.contentView.setWantsLayer(false)
-    self.setAlphaValue(0.4)
+    self.setAlphaValue(0.8)
     self.setOpaque(false)
     start_daemon
     start_timer
@@ -39,7 +39,7 @@ class OverlayWindow < NSWindow
 
     @tick += 1
 
-    if @tick == 60
+    if @tick == 30
       @tick = 0
     end
 
@@ -59,21 +59,28 @@ class OverlayWindow < NSWindow
   end
 
   def set_next_target
+    @double_zero_count ||= 0
     data = @file.availableData
     if data.length > 0
       output = NSString.alloc.initWithData(data, encoding: NSUTF8StringEncoding)
       output = output.each_line.to_a.last
       x_ratio = output.split(',')[0].to_f
       y_ratio = output.split(',')[1].to_f
-      if (x_ratio != 0 && y_ratio != 0)
-        # 0, 0 is top left
-        # 1, 1 is bottom right
-        # 0, 1 is bottom left
-        # 1, 0 is top right
-        next_target_x = @screen_width * x_ratio
-        next_target_y = @screen_height - (@screen_height * y_ratio)
+      # puts "output"
+      # puts "#{x_ratio},#{y_ratio}"
+      next_target_x = @screen_width * x_ratio
+      next_target_y = @screen_height - (@screen_height * y_ratio)
 
-        if (@target_x - next_target_x).abs > 30 || (@target_y - next_target_y) > 30
+      if (@target_x - next_target_x).abs > 30 || (@target_y - next_target_y) > 30
+        if next_target_x == 0 && next_target_y == 0
+          @double_zero_count += 1
+          if @double_zero_count >= 3
+            @target_x = next_target_x
+            @target_y = next_target_y
+            @double_zero_count = 0
+          end
+        else
+          @double_zero_count = 0
           @target_x = next_target_x
           @target_y = next_target_y
         end
