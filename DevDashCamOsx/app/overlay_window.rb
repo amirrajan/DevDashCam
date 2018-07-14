@@ -34,7 +34,9 @@ class OverlayWindow < NSWindow
 
   def tick
     if @tick == 0
-      NSThread.detachNewThreadSelector :set_next_target, toTarget: self, withObject: nil
+      NSThread.detachNewThreadSelector :set_next_target,
+                                       toTarget: self,
+                                       withObject: nil
     end
 
     @tick += 1
@@ -58,8 +60,14 @@ class OverlayWindow < NSWindow
     @current_y = next_y
   end
 
+  def write_gaze_to_file text
+    fileHandle = NSFileHandle.fileHandleForWritingAtPath '/Users/amiralirajan/Desktop/thegaze.log'
+    fileHandle.seekToEndOfFile
+    fileHandle.writeData "#{text}\n".dataUsingEncoding(NSUTF8StringEncoding)
+    fileHandle.closeFile
+  end
+
   def set_next_target
-    @double_zero_count ||= 0
     data = @file.availableData
     if data.length > 0
       output = NSString.alloc.initWithData(data, encoding: NSUTF8StringEncoding)
@@ -69,21 +77,13 @@ class OverlayWindow < NSWindow
       # puts "output"
       # puts "#{x_ratio},#{y_ratio}"
       next_target_x = @screen_width * x_ratio
-      next_target_y = @screen_height - (@screen_height * y_ratio)
+      cardinal_y = (@screen_height * y_ratio)
+      next_target_y = @screen_height - cardinal_y
 
       if (@target_x - next_target_x).abs > 30 || (@target_y - next_target_y) > 30
-        if next_target_x == 0 && next_target_y == 0
-          @double_zero_count += 1
-          if @double_zero_count >= 3
-            @target_x = next_target_x
-            @target_y = next_target_y
-            @double_zero_count = 0
-          end
-        else
-          @double_zero_count = 0
-          @target_x = next_target_x
-          @target_y = next_target_y
-        end
+        @target_x = next_target_x unless x_ratio == 0
+        @target_y = next_target_y unless y_ratio == 0
+        write_gaze_to_file "#{next_target_x},#{cardinal_y}"
       end
     end
 
