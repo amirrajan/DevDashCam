@@ -1,8 +1,8 @@
 class OverlayWindow < NSWindow
   def show
     $overlay = self
-    @calibration_offset_x = -85
-    @calibration_offset_y = -45
+    @calibration_offset_x = 0
+    @calibration_offset_y = 0
     @screen_width = 2560
     @screen_height = 1067
     @tick = 0
@@ -18,8 +18,23 @@ class OverlayWindow < NSWindow
     self.contentView.setWantsLayer(false)
     self.setAlphaValue(0.8)
     self.setOpaque(false)
+    read_config
     start_daemon
     start_timer
+  end
+
+  def read_config
+    path = "~/.devdashcamrc".stringByExpandingTildeInPath
+    content = NSString.stringWithContentsOfFile(path, encoding: NSUTF8StringEncoding, error: nil)
+    content.each_line do |l|
+      tokens = l.split(' ').map { |t| t.strip }
+      if tokens[0] == "calibration-offset-x"
+        @calibration_offset_x = tokens[-1].to_i
+      end
+      if tokens[0] == "calibration-offset-y"
+        @calibration_offset_y = tokens[-1].to_i
+      end
+    end
   end
 
   def start_timer
@@ -37,6 +52,8 @@ class OverlayWindow < NSWindow
       NSThread.detachNewThreadSelector :set_next_target,
                                        toTarget: self,
                                        withObject: nil
+
+      read_config
     end
 
     @tick += 1
