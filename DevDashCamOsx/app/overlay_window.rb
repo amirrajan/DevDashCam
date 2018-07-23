@@ -13,9 +13,9 @@ class OverlayWindow < NSWindow
     @target_y = 0
     @current_x = @screen_width.fdiv(2)
     @current_y = @screen_height.fdiv(2)
-    @log_path =  '~/.devdashcam/log'.stringByExpandingTildeInPath
-    @config_path = "~/.devdashcam/config".stringByExpandingTildeInPath
-    @overlay_path = '~/Desktop/overlay.png'.stringByExpandingTildeInPath
+    @log_path     =  '~/.devdashcam/log'.stringByExpandingTildeInPath
+    @config_path  =  '~/.devdashcam/config'.stringByExpandingTildeInPath
+    @overlay_path =  '~/Desktop/overlay.png'.stringByExpandingTildeInPath
     @source = NSImage.alloc.initWithContentsOfFile(@overlay_path)
     @config_last_change_date = get_last_modified_for_file @config_path
     self.orderFrontRegardless
@@ -25,8 +25,82 @@ class OverlayWindow < NSWindow
     self.contentView.setWantsLayer(false)
     self.setAlphaValue(@overlay_opacity)
     self.setOpaque(false)
+    create_dev_dash_cam_directory
+    write_default_config_file
+    write_empty_log_file
+    set_member_variables_from_config
     start_daemon
     start_timer
+  end
+
+  def default_config_text
+    @default_config_text ||= <<-HEREDOC
+# after you have calibrated, you may want to tweak the values
+# from your eye tracker slightly.
+
+# A negative `calibration-offset-x` will shift the overlay to
+# the left (positive will shift it right) in pixels.
+calibration-offset-x   -50
+
+# A negative `calibration-offset-y` well shift the overlay down
+# (positive will shift it up) in pixels.
+calibration-offset-y   -75
+
+# This value will increass or decrease the opacity of ther overlay.
+overlay-opacity        0.8
+
+# This is the path to the overlay png (make sure to use transparancies
+# or you won't be able to click through the overlay.
+overlay-path           ~/Desktop/overlay.png
+
+# This value controls how sensitive the overlay is to eye movement (in pixels).
+# If your eye moves slightly within the pixel threshold, the overlay will not move.
+# I high number will make the overlay less sensitive to movement. A small value
+# will make it more sensitive.
+overlay-sensitivity    30
+
+# This controls how quickly the overlay moves to the new location. A value of 1.0
+# will move the overlay very quickly to the new location. A value of 0.01 will
+# move the overlay more slowly to the new location.
+overlay-speed          0.07
+
+# This is the location of the log file for "all the things"
+# Dev Dash Cam does.
+log-file               ~/.devdashcam/log
+
+# This represents the resolution of the main monitor the overlay is on.
+screen-resolution      2560,1067
+HEREDOC
+  end
+
+  def create_dev_dash_cam_directory
+    root_directory = '~/.devdashcam'.stringByExpandingTildeInPath
+    NSFileManager.defaultManager.createDirectoryAtPath(
+      root_directory,
+      attributes: {}
+    )
+  end
+
+  def write_default_config_file overwrite = false
+    file_exists = NSFileManager.defaultManager.fileExistsAtPath('~/.devdashcam/config'.stringByExpandingTildeInPath, nil)
+    return if file_exists && overwrite == false
+
+    content = default_config_text
+    file_contents = content.dataUsingEncoding(NSUTF8StringEncoding)
+    NSFileManager.defaultManager.createFileAtPath(
+      @config_path,
+      contents: file_contents,
+      attributes: {}
+    )
+  end
+
+  def write_empty_log_file
+    file_contents = "".dataUsingEncoding(NSUTF8StringEncoding)
+    NSFileManager.defaultManager.createFileAtPath(
+      @log_path,
+      contents: file_contents,
+      attributes: {}
+    )
   end
 
   def set_member_variables_from_config
