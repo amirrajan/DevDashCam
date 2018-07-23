@@ -5,6 +5,8 @@
 #include "tobii_research_eyetracker.h"
 #include "tobii_research_streams.h"
 #include "tobii_research_calibration.h"
+#include <wordexp.h>
+
 
 static
 void sleep_ms (int time)
@@ -46,6 +48,24 @@ gaze_data_example (TobiiResearchEyeTracker* eyetracker)
 					      gaze_data_callback);
 }
 
+void apply_license(TobiiResearchEyeTracker * eyetracker, const char * license_file_path) {
+  #define NUM_OF_LICENSES 1
+  char* license_key_ring[NUM_OF_LICENSES];
+  FILE *license_file = fopen(license_file_path, "rb" );
+  fseek(license_file, 0, SEEK_END);
+  size_t file_size = (size_t)ftell(license_file);
+  rewind(license_file);
+  license_key_ring[0] = (char*)malloc(file_size);
+  if(license_key_ring[0]) {
+    fread( license_key_ring[0], sizeof(char), file_size, license_file );
+  }
+  fclose(license_file);
+  TobiiResearchLicenseValidationResult validation_results;
+  TobiiResearchStatus retval = tobii_research_apply_licenses(eyetracker, (const
+									  void**)license_key_ring, &file_size, &validation_results, NUM_OF_LICENSES);
+  free(license_key_ring[0]);
+}
+
 int main ()
 {
   TobiiResearchEyeTrackers* eyetrackers = NULL;
@@ -70,6 +90,11 @@ int main ()
 
   TobiiResearchEyeTracker* first_tracker =
     eyetrackers->eyetrackers[0];
+
+  wordexp_t exp_result;
+  wordexp("~/.devdashcam/license", &exp_result, 0);
+
+  apply_license(first_tracker, exp_result);
 
   gaze_data_example(first_tracker);
 
