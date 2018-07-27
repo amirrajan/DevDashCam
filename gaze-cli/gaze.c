@@ -7,7 +7,6 @@
 #include "tobii_research_calibration.h"
 #include <wordexp.h>
 
-
 static
 void sleep_ms (int time)
 {
@@ -91,10 +90,10 @@ int main ()
   TobiiResearchEyeTracker* first_tracker =
     eyetrackers->eyetrackers[0];
 
-  wordexp_t exp_result;
-  wordexp("~/.devdashcam/license", &exp_result, 0);
+  /* wordexp_t exp_result; */
+  /* wordexp("~/.devdashcam/license", &exp_result, 0); */
 
-  apply_license(first_tracker, exp_result);
+  /* apply_license(first_tracker, exp_result); */
 
   gaze_data_example(first_tracker);
 
