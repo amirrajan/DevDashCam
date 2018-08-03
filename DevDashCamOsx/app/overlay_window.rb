@@ -116,7 +116,7 @@ HEREDOC
         @calibration_offset_y = config_value.to_f
       when "overlay-opacity"
         @overlay_opacity = config_value.to_f
-      when "screen_resolution"
+      when "screen-resolution"
         @screen_width = config_value.split(',')[0].to_i
         @screen_height = config_value.split(',')[1].to_i
       when "overlay-path"
@@ -209,7 +209,7 @@ HEREDOC
       cardinal_y = (@screen_height * y_ratio)
       next_target_y = @screen_height - cardinal_y
 
-      if (@target_x - next_target_x).abs > @overlay_sensitivity || (@target_y - next_target_y) > @overlay_sensitivity
+      if (@target_x - next_target_x).abs > @overlay_sensitivity || (@target_y - next_target_y).abs > @overlay_sensitivity
         @target_x = next_target_x unless x_ratio == 0
         @target_y = next_target_y unless y_ratio == 0
         write_gaze_to_file "#{next_target_x},#{cardinal_y}"
