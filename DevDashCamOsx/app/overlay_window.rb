@@ -8,6 +8,7 @@ class OverlayWindow < NSWindow
     @screen_height = 1067
     @overlay_opacity = 0.8
     @overlay_sensitivity = 30
+    @monitor_index = 0
     @tick = 0
     @target_x = 0
     @target_y = 0
@@ -41,6 +42,9 @@ class OverlayWindow < NSWindow
 # A negative `calibration-offset-x` will shift the overlay to
 # the left (positive will shift it right) in pixels.
 calibration-offset-x   -50
+
+# The monitor index (if you have multiple monitors)
+monitor-index 0
 
 # A negative `calibration-offset-y` well shift the overlay down
 # (positive will shift it up) in pixels.
@@ -121,15 +125,21 @@ HEREDOC
         @screen_height = config_value.split(',')[1].to_i
       when "overlay-path"
         @overlay_path = config_value.stringByExpandingTildeInPath
+      when "monitor-index"
+        @monitor_index = config_value.to_i
       end
     end
 
-    puts @calibration_offset_x
-    puts @calibration_offset_y
-    puts @overlay_opacity
-    puts @overlay_path
-    puts @screen_width
-    puts @screen_height
+    @target_screen = NSScreen.screens[@monitor_index] || NSScreen.screens[0]
+
+    puts "@calibration_offset_x: #{@calibration_offset_x}"
+    puts "@calibration_offset_y: #{@calibration_offset_y}"
+    puts "@overlay_opacity     : #{@overlay_opacity     }"
+    puts "@overlay_path        : #{@overlay_path        }"
+    puts "@screen_width        : #{@screen_width        }"
+    puts "@screen_height       : #{@screen_height       }"
+    puts "@monitor_index       : #{@monitor_index       }"
+    puts "@target_screen       : #{@target_screen.frame.origin.x},#{@target_screen.frame.origin.y},#{@target_screen.frame.size.width},#{@target_screen.frame.size.height}"
   end
 
   def get_last_modified_for_file file
@@ -166,6 +176,8 @@ HEREDOC
                                 withObject: self,
                                 waitUntilDone: true
   end
+
+
 
   def move_view
     next_x = @current_x - ((@current_x - @target_x) * 0.07)
@@ -205,13 +217,14 @@ HEREDOC
       output = output.each_line.to_a.last
       x_ratio = output.split(',')[0].to_f
       y_ratio = output.split(',')[1].to_f
-      next_target_x = @screen_width * x_ratio
-      cardinal_y = (@screen_height * y_ratio)
+      # puts "#{x_ratio},#{y_ratio}"
+      next_target_x = @target_screen.frame.size.width * x_ratio
+      cardinal_y = (@target_screen.frame.size.height * y_ratio)
       next_target_y = @screen_height - cardinal_y
 
       if (@target_x - next_target_x).abs > @overlay_sensitivity || (@target_y - next_target_y).abs > @overlay_sensitivity
-        @target_x = next_target_x unless x_ratio == 0
-        @target_y = next_target_y unless y_ratio == 0
+        @target_x = @target_screen.frame.origin.x + next_target_x unless x_ratio == 0
+        @target_y = @target_screen.frame.origin.y + next_target_y unless y_ratio == 0
         write_gaze_to_file "#{next_target_x},#{cardinal_y}"
       end
     end

@@ -2,10 +2,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <wordexp.h>
+#include <execinfo.h>
+#include <signal.h>
+#include <unistd.h>
 #include "tobii_research_eyetracker.h"
 #include "tobii_research_streams.h"
 #include "tobii_research_calibration.h"
-#include <wordexp.h>
+
+void handler(int sig)
+{
+  void *array[10];
+  size_t size;
+  size = backtrace(array, 10);
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
+}
+
 
 static
 void sleep_ms (int time)
@@ -47,10 +61,11 @@ gaze_data_example (TobiiResearchEyeTracker* eyetracker)
 					      gaze_data_callback);
 }
 
-void apply_license(TobiiResearchEyeTracker * eyetracker, const char * license_file_path) {
+void apply_license(TobiiResearchEyeTracker * eyetracker, wordexp_t * wordexp_license_file_path) {
+
   #define NUM_OF_LICENSES 1
   char* license_key_ring[NUM_OF_LICENSES];
-  FILE *license_file = fopen(license_file_path, "rb" );
+  FILE *license_file = fopen(*wordexp_license_file_path->we_wordv, "rb" );
   fseek(license_file, 0, SEEK_END);
   size_t file_size = (size_t)ftell(license_file);
   rewind(license_file);
@@ -62,11 +77,14 @@ void apply_license(TobiiResearchEyeTracker * eyetracker, const char * license_fi
   TobiiResearchLicenseValidationResult validation_results;
   TobiiResearchStatus retval = tobii_research_apply_licenses(eyetracker, (const
 									  void**)license_key_ring, &file_size, &validation_results, NUM_OF_LICENSES);
+  printf("validation results: %d\n", validation_results);
   free(license_key_ring[0]);
 }
 
 int main ()
 {
+  signal(SIGSEGV, handler);
+
   TobiiResearchEyeTrackers* eyetrackers = NULL;
 
   TobiiResearchStatus result;
@@ -90,10 +108,10 @@ int main ()
   TobiiResearchEyeTracker* first_tracker =
     eyetrackers->eyetrackers[0];
 
-  /* wordexp_t exp_result; */
-  /* wordexp("~/.devdashcam/license", &exp_result, 0); */
+  wordexp_t exp_result;
+  wordexp("~/.devdashcam/se_license_key_dev_dash_cam", &exp_result, 0);
 
-  /* apply_license(first_tracker, exp_result); */
+  apply_license(first_tracker, &exp_result);
 
   gaze_data_example(first_tracker);
 
