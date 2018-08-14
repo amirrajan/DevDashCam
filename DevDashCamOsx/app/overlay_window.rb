@@ -220,7 +220,7 @@ HEREDOC
       # puts "#{x_ratio},#{y_ratio}"
       next_target_x = @target_screen.frame.size.width * x_ratio
       cardinal_y = (@target_screen.frame.size.height * y_ratio)
-      next_target_y = @screen_height - cardinal_y
+      next_target_y = @target_screen.frame.size.height - cardinal_y
 
       if (@target_x - next_target_x).abs > @overlay_sensitivity || (@target_y - next_target_y).abs > @overlay_sensitivity
         @target_x = @target_screen.frame.origin.x + next_target_x unless x_ratio == 0
