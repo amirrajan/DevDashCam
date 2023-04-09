@@ -198,7 +198,6 @@ HEREDOC
 
   def set_next_target
     self.setAlphaValue(@overlay_opacity)
-
     if @config_last_change_date != get_last_modified_for_file(@config_path)
       @config_last_change_date = get_last_modified_for_file @config_path
       set_member_variables_from_config
@@ -209,6 +208,7 @@ HEREDOC
       self.orderFrontRegardless
       self.setContentSize(@source.size)
       self.setBackgroundColor(NSColor.colorWithPatternImage(@source))
+      @last_overlay_path = @overlay_path
     end
 
     data = @file.availableData
@@ -217,7 +217,6 @@ HEREDOC
       output = output.each_line.to_a.last
       x_ratio = output.split(',')[0].to_f
       y_ratio = output.split(',')[1].to_f
-      # puts "#{x_ratio},#{y_ratio}"
       next_target_x = @target_screen.frame.size.width * x_ratio
       cardinal_y = (@target_screen.frame.size.height * y_ratio)
       next_target_y = @target_screen.frame.size.height - cardinal_y

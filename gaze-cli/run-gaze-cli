@@ -1,3 +1,3 @@
 #!/bin/bash
 
-LD_LIBRARY_PATH=/Users/amiralirajan/projects/DevDashCam/gaze-cli/lib /Users/amiralirajan/projects/DevDashCam/gaze-cli/gaze-cli
+LD_LIBRARY_PATH=/Users/amiralirajan/projects/DevDashCam/gaze-cli/lib /Users/amiralirajan/projects/DevDashCam/gaze-cli/Dev\ Dash\ Cam

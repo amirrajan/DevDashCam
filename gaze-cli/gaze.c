@@ -109,7 +109,7 @@ int main ()
     eyetrackers->eyetrackers[0];
 
   wordexp_t exp_result;
-  wordexp("~/.devdashcam/se_license_key_dev_dash_cam", &exp_result, 0);
+  wordexp("~/.devdashcam/se_license_key_process_devdashcam", &exp_result, 0);
 
   apply_license(first_tracker, &exp_result);
 
