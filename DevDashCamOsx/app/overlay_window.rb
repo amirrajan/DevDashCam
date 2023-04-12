@@ -16,7 +16,7 @@ class OverlayWindow < NSWindow
     @current_y = @screen_height.fdiv(2)
     @log_path     =  '~/.devdashcam/log'.stringByExpandingTildeInPath
     @config_path  =  '~/.devdashcam/config'.stringByExpandingTildeInPath
-    @overlay_path =  '~/Desktop/overlay.png'.stringByExpandingTildeInPath
+    @overlay_path =  '~/.devdashcam/overlay.png'.stringByExpandingTildeInPath
     @source = NSImage.alloc.initWithContentsOfFile(@overlay_path)
     @config_last_change_date = get_last_modified_for_file @config_path
     self.orderFrontRegardless
@@ -55,7 +55,7 @@ overlay-opacity        0.8
 
 # This is the path to the overlay png (make sure to use transparancies
 # or you won't be able to click through the overlay.
-overlay-path           ~/Desktop/overlay.png
+overlay-path           ~/.devdashcam/overlay.png
 
 # This value controls how sensitive the overlay is to eye movement (in pixels).
 # If your eye moves slightly within the pixel threshold, the overlay will not move.
