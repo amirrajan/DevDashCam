@@ -235,7 +235,7 @@ HEREDOC
     @pipe = NSPipe.pipe
     @file = @pipe.fileHandleForReading;
     @task = NSTask.alloc.init
-    @task.launchPath = "/usr/local/bin/run-gaze-cli"
+    @task.launchPath = "/usr/local/bin/Dev Dash Cam"
     @task.standardOutput = @pipe;
     @task.launch
     @file.waitForDataInBackgroundAndNotify
