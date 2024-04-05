@@ -26,6 +26,7 @@ class OverlayWindow < NSWindow
     self.contentView.setWantsLayer(false)
     self.setAlphaValue(@overlay_opacity)
     self.setOpaque(false)
+    self.setIgnoresMouseEvents(true)
     create_dev_dash_cam_directory
     write_default_config_file
     write_empty_log_file
@@ -235,6 +236,9 @@ HEREDOC
     @pipe = NSPipe.pipe
     @file = @pipe.fileHandleForReading;
     @task = NSTask.alloc.init
+    @task.environment = {
+      "DYLD_INSERT_LIBRARIES" => "/usr/local/lib/libtobii_research.dylib"
+    }
     @task.launchPath = "/usr/local/bin/Dev Dash Cam"
     @task.standardOutput = @pipe;
     @task.launch
