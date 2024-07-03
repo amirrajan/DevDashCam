@@ -192,6 +192,7 @@ HEREDOC
 
   def write_gaze_to_file text
     fileHandle = NSFileHandle.fileHandleForWritingAtPath @log_path
+    return if !fileHandle
     fileHandle.seekToEndOfFile
     fileHandle.writeData "#{text}\n".dataUsingEncoding(NSUTF8StringEncoding)
     fileHandle.closeFile

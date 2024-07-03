@@ -14,4 +14,6 @@ Motion::Project::App.setup do |app|
 
   app.info_plist['CFBundleIconName'] = 'AppIcon'
   app.frameworks << "Foundation"
+  app.deployment_target = "12.1"
+  app.xcode_dir = "/Applications/Xcode-13.2.1.app/Contents/Developer"
 end
